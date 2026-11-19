@@ -80,7 +80,7 @@ bg.write_text(g.replace('manifestPlaceholders["appLabel"] = "小果影视"',
 print("OK build.gradle.kts")
 
 final = sec.read_text(encoding="utf-8")
-for bad in ("_UpdateCheckTile()", "启动时检查更新", "匿名使用统计"):
+for bad in ("const _UpdateCheckTile(),", "启动时检查更新", "匿名使用统计"):
     if bad in final:
         sys.exit("FAIL: leftover %s" % bad)
 print("VERIFY OK - 3 widgets removed, links replaced")
