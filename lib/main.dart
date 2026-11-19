@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core_bridge.dart';
+import 'announcement.dart';
+import 'announcement_dialog.dart';
 import 'app_layout.dart';
 import 'app_orientation.dart';
 import 'app_theme.dart';
@@ -96,6 +98,17 @@ class _AppBootstrapState extends State<AppBootstrap>
     }
   }
 
+  Future<void> _announce(SharedPreferences preferences) async {
+    final announcement = await AnnouncementService(preferences).check();
+    final context = navigator.currentContext;
+    if (!mounted || announcement == null || context == null) return;
+    await showAnnouncementDialog(
+      context,
+      announcement,
+      () => AnnouncementService(preferences).dismiss(announcement),
+    );
+  }
+
   Future<void> _refreshDevice() async {
     final detected = await AppDevice.detect(fallback: device);
     if (!mounted ||
@@ -112,6 +125,7 @@ class _AppBootstrapState extends State<AppBootstrap>
     });
     try {
       final preferences = await SharedPreferences.getInstance();
+      unawaited(preferences.setString(announcementVersionKey, appVersion));
       await _refreshDevice();
       await repository.initialize();
       if (mounted) {
@@ -119,6 +133,11 @@ class _AppBootstrapState extends State<AppBootstrap>
           store = LocalStore(preferences);
           repository.access = store;
           MediaLibrary.attach(repository, store!);
+          if (!store!.locked) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => unawaited(_announce(preferences)),
+            );
+          }
           LanController.current?.dispose();
           final link = LanController(
             repository,
