@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Download guoapp 2.0.1 source
         run: |
@@ -19,10 +20,6 @@ jobs:
           curl -sL -o src.zip https://codeload.github.com/Xanerix/guoapp/zip/refs/tags/app-v2.0.1-113
           unzip -q src.zip
           mv guoapp-app-v2.0.1-113 app
-          ls -d app
-
-      - name: Apply patch
-        run: python3 patch_guoapp.py
 
       - uses: actions/setup-java@v4
         with:
@@ -47,6 +44,9 @@ jobs:
 
       - name: Setup NDK
         run: sdkmanager 'ndk;28.2.13676358'
+
+      - name: Patch source
+        run: python3 patch_guoapp.py
 
       - name: Build native (Go)
         working-directory: app
